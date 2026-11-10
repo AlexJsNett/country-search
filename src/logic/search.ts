@@ -73,23 +73,28 @@ export const createSearchController = ({
 
   const debouncedRun = debounce(run, debounceMs);
 
-  return {
-    input: (text) => {
-      cancelCurrent();
-      const query = text.trim();
-      if (query === "") {
-        debouncedRun.cancel();
-        lastQuery = "";
-        onState({ status: "idle" });
-        return;
-      }
-      lastQuery = query;
-      onState({ status: "loading", query });
+  const start = (text: string, immediate: boolean) => {
+    cancelCurrent();
+    const query = text.trim();
+    if (query === "") {
+      debouncedRun.cancel();
+      lastQuery = "";
+      onState({ status: "idle" });
+      return;
+    }
+    lastQuery = query;
+    onState({ status: "loading", query });
+    if (immediate) {
+      debouncedRun.cancel();
+      void run(query);
+    } else {
       debouncedRun(query);
-    },
-    searchNow: (_text) => {
-      throw new Error("not implemented");
-    },
+    }
+  };
+
+  return {
+    input: (text) => start(text, false),
+    searchNow: (text) => start(text, true),
     retry: () => {
       if (lastQuery === "") return;
       cancelCurrent();
