@@ -37,6 +37,7 @@ export const saveHistory = (
   storage.setItem(HISTORY_KEY, JSON.stringify(history));
 };
 
-export const exactMatchName = (_state: SearchState): string | null => {
-  throw new Error("not implemented");
-};
+export const exactMatchName = (state: SearchState): string | null =>
+  state.status === "results" && state.countries.length === 1
+    ? (state.countries[0]?.name ?? null)
+    : null;
