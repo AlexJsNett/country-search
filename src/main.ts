@@ -2,6 +2,7 @@ import { searchCountries } from "./logic/api.js";
 import { createCachedSearch } from "./logic/cache.js";
 import { addToHistory, loadHistory, saveHistory } from "./logic/history.js";
 import { createSearchController, type SearchState } from "./logic/search.js";
+import type { CountryCard } from "./logic/types.js";
 import { createDetailsDialog } from "./ui/details.js";
 import { el } from "./ui/dom.js";
 import { renderHistory } from "./ui/history.js";
@@ -26,17 +27,14 @@ const input = el("input", {
 
 const controller = createSearchController({
   search: createCachedSearch(searchCountries),
-  onState: (state) => {
-    remember(state);
-    renderState(state);
-  },
+  onState: (state) => renderState(state),
 });
 
-const remember = (state: SearchState) => {
-  if (state.status !== "results" && state.status !== "empty") return;
-  history = addToHistory(history, state.query);
+const openCountry = (country: CountryCard) => {
+  history = addToHistory(history, country.name);
   saveHistory(localStorage, history);
   renderHistorySlot();
+  details.open(country);
 };
 
 const renderHistorySlot = () => {
@@ -56,7 +54,7 @@ const renderState = (state: SearchState) => {
   resultsSlot.scrollTop = 0;
   resultsSlot.replaceChildren(
     ...renderResults(state, {
-      onOpen: details.open,
+      onOpen: openCountry,
       onRetry: controller.retry,
     }),
   );
