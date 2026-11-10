@@ -24,7 +24,7 @@ arrives later and overwrites the correct result on screen.
 
 1. **On every input event** (the very first line of `start`) the current controller is aborted and
    dropped. This happens on every keystroke, _not only_ when the debounce timer fires. Without this, a
-   response for `sp` could still arrive during the 300 ms debounce wait and be rendered under the new
+   response for `sp` could still arrive during the 500 ms debounce wait and be rendered under the new
    text `spa`.
 2. When the debounce fires, a new `AbortController` is created and its `signal` is passed to
    `searchCountries`.
@@ -60,16 +60,19 @@ The race is covered by `src/logic/search.race.test.ts`: the `fetch` mock resolve
 and rejects with `signal.reason` when its signal is aborted, so the test fails if the app only
 ignores the late response.
 
-## 2. Debounce delay: 300 ms
+## 2. Debounce delay: 500 ms
 
 `debounce(fn, delay)` (`src/logic/debounce.ts`) keeps a single timer and resets it on every call.
 
 - **No debounce (0 ms):** one request per keystroke (`s`, `sp`, `spa`, ...). Most of them are thrown
   away at once, the API gets many pointless requests, and the UI flickers between loading states.
 - **Very long (1000 ms and more):** the app feels broken, the user thinks nothing is happening.
-- **300 ms** is longer than the typical gap between keystrokes of a normal typist (about 100-200 ms),
-  so a word typed in one go results in one request, and short enough to feel instant after the user
-  stops. The value is a named constant `DEBOUNCE_MS`.
+- **500 ms** is longer than the gap between keystrokes of a normal typist (about 100-200 ms) and than
+  the short pauses people make in the middle of a word (up to about 400 ms), so a word typed in one go
+  results in one request, and the results do not jump while the user is still typing. It is still
+  short enough not to feel slow after the user stops. It started as 300 ms, but pauses in the middle
+  of a word still triggered extra requests, so it was raised. The value is a named constant
+  `DEBOUNCE_MS`.
 
 The debounce delays only the _network call_. The loading state is shown immediately, and the previous
 request is cancelled immediately (see above), so the delay never shows stale data.

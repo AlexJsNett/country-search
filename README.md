@@ -12,5 +12,5 @@ Task: https://github.com/rolling-scopes-school/tasks/blob/master/fullstack-engin
 
 Open `index.html` through any static server after `npm run build`.
 
-See [DESIGN.md](./DESIGN.md) for how stale requests are cancelled, why the debounce is 300 ms,
+See [DESIGN.md](./DESIGN.md) for how stale requests are cancelled, why the debounce is 500 ms,
 complexity and clean code notes.

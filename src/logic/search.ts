@@ -4,7 +4,7 @@ import { classifyError, type ErrorKind } from "./errors.js";
 import { mapCountryResponse } from "./map.js";
 import type { CountryCard, RawCountry } from "./types.js";
 
-export const DEBOUNCE_MS = 300;
+export const DEBOUNCE_MS = 500;
 
 export type SearchState =
   | { readonly status: "idle" }
