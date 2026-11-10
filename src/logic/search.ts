@@ -28,6 +28,7 @@ export type SearchFn = (
 
 export type SearchController = {
   readonly input: (text: string) => void;
+  readonly searchNow: (text: string) => void;
   readonly retry: () => void;
   readonly dispose: () => void;
 };
@@ -85,6 +86,9 @@ export const createSearchController = ({
       lastQuery = query;
       onState({ status: "loading", query });
       debouncedRun(query);
+    },
+    searchNow: (_text) => {
+      throw new Error("not implemented");
     },
     retry: () => {
       if (lastQuery === "") return;

@@ -184,4 +184,45 @@ describe("createSearchController", () => {
     expect(states).toEqual([]);
     expect(searchMock).not.toHaveBeenCalled();
   });
+
+  describe("searchNow", () => {
+    it("fetches immediately without waiting for the debounce", async () => {
+      const { states, searchMock, controller } = setup(async () => [
+        spain as RawCountry,
+      ]);
+      controller.searchNow("spain");
+      expect(last(states)).toEqual({ status: "loading", query: "spain" });
+      await vi.advanceTimersByTimeAsync(0);
+      expect(searchMock).toHaveBeenCalledTimes(1);
+      expect(searchMock.mock.calls[0]?.[0]).toBe("spain");
+      expect(last(states)?.status).toBe("results");
+    });
+
+    it("drops a pending debounced input instead of searching twice", async () => {
+      const { searchMock, controller } = setup(async () => []);
+      controller.input("fra");
+      controller.searchNow("spain");
+      await vi.advanceTimersByTimeAsync(DELAY * 2);
+      expect(searchMock).toHaveBeenCalledTimes(1);
+      expect(searchMock.mock.calls[0]?.[0]).toBe("spain");
+    });
+
+    it("goes idle for an empty text", async () => {
+      const { states, searchMock, controller } = setup(async () => []);
+      controller.searchNow("  ");
+      await vi.advanceTimersByTimeAsync(DELAY);
+      expect(last(states)).toEqual({ status: "idle" });
+      expect(searchMock).not.toHaveBeenCalled();
+    });
+
+    it("lets retry repeat the query that was searched now", async () => {
+      const { searchMock, controller } = setup(async () => []);
+      controller.searchNow("spain");
+      await vi.advanceTimersByTimeAsync(0);
+      controller.retry();
+      await vi.advanceTimersByTimeAsync(0);
+      expect(searchMock).toHaveBeenCalledTimes(2);
+      expect(searchMock.mock.calls[1]?.[0]).toBe("spain");
+    });
+  });
 });
