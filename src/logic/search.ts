@@ -1,4 +1,7 @@
-import type { ErrorKind } from "./errors.js";
+import { searchCountries } from "./api.js";
+import { debounce } from "./debounce.js";
+import { classifyError, type ErrorKind } from "./errors.js";
+import { mapCountryResponse } from "./map.js";
 import type { CountryCard, RawCountry } from "./types.js";
 
 export const DEBOUNCE_MS = 300;
@@ -35,8 +38,50 @@ export type SearchControllerOptions = {
   readonly debounceMs?: number;
 };
 
-export const createSearchController = (
-  _options: SearchControllerOptions,
-): SearchController => {
-  throw new Error("not implemented");
+export const createSearchController = ({
+  onState,
+  search = searchCountries,
+  debounceMs = DEBOUNCE_MS,
+}: SearchControllerOptions): SearchController => {
+  let lastQuery = "";
+
+  const run = async (query: string): Promise<void> => {
+    const request = new AbortController();
+    try {
+      const raw = await search(query, request.signal);
+      const countries = raw.map((country) => mapCountryResponse(country));
+      onState(
+        countries.length === 0
+          ? { status: "empty", query }
+          : { status: "results", query, countries },
+      );
+    } catch (error) {
+      const kind = classifyError(error);
+      if (kind.kind === "cancelled") return;
+      onState({ status: "error", query, error: kind });
+    }
+  };
+
+  const debouncedRun = debounce(run, debounceMs);
+
+  return {
+    input: (text) => {
+      const query = text.trim();
+      if (query === "") {
+        debouncedRun.cancel();
+        lastQuery = "";
+        onState({ status: "idle" });
+        return;
+      }
+      lastQuery = query;
+      onState({ status: "loading", query });
+      debouncedRun(query);
+    },
+    retry: () => {
+      if (lastQuery === "") return;
+      onState({ status: "loading", query: lastQuery });
+      void run(lastQuery);
+    },
+    dispose: () => debouncedRun.cancel(),
+  };
 };
