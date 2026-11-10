@@ -18,7 +18,7 @@ const resultsSlot = el("div", {
 });
 
 const input = el("input", {
-  type: "search",
+  type: "text",
   className: "search",
   placeholder: "Введите название страны",
   autocomplete: "off",
@@ -43,6 +43,7 @@ const renderHistorySlot = () => {
       ? [
           renderHistory(history, (query) => {
             input.value = query;
+            clearButton.hidden = false;
             controller.searchNow(query);
           }),
         ]
@@ -60,14 +61,31 @@ const renderState = (state: SearchState) => {
   );
 };
 
-input.addEventListener("input", () => controller.input(input.value));
+const clearButton = el("button", {
+  type: "button",
+  className: "clear",
+  textContent: "\u00D7",
+  ariaLabel: "Очистить поиск",
+  hidden: true,
+  onclick: () => {
+    input.value = "";
+    clearButton.hidden = true;
+    controller.input("");
+    input.focus();
+  },
+});
+
+input.addEventListener("input", () => {
+  clearButton.hidden = input.value === "";
+  controller.input(input.value);
+});
 
 document.body.append(
   el(
     "main",
     {},
     el("h1", { textContent: "Поиск стран" }),
-    input,
+    el("div", { className: "search-box" }, input, clearButton),
     historySlot,
     resultsSlot,
     details.element,
