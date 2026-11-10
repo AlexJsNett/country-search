@@ -1,3 +1,5 @@
+import type { SearchState } from "./search.js";
+
 export const HISTORY_KEY = "country-search:history";
 export const HISTORY_LIMIT = 8;
 
@@ -33,4 +35,8 @@ export const saveHistory = (
   history: readonly string[],
 ): void => {
   storage.setItem(HISTORY_KEY, JSON.stringify(history));
+};
+
+export const exactMatchName = (_state: SearchState): string | null => {
+  throw new Error("not implemented");
 };

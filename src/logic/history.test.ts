@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
+import type { SearchState } from "./search.js";
+import type { CountryCard } from "./types.js";
 import {
   HISTORY_KEY,
   addToHistory,
+  exactMatchName,
   loadHistory,
   saveHistory,
   type KeyValueStorage,
@@ -70,5 +73,50 @@ describe("history storage", () => {
   it("drops entries that are not non-empty strings", () => {
     const stored = JSON.stringify(["spain", 5, "", null, "france"]);
     expect(loadHistory(memoryStorage(stored))).toEqual(["spain", "france"]);
+  });
+});
+
+const card = (name: string): CountryCard => ({
+  name,
+  nativeName: null,
+  demonym: null,
+  flagUrl: null,
+  flagEmoji: "",
+  capital: null,
+  region: "",
+  subregion: null,
+  population: 0,
+  area: null,
+  borders: [],
+  languages: [],
+  currencies: [],
+});
+
+describe("exactMatchName", () => {
+  it("returns the country name when exactly one country was found", () => {
+    const state: SearchState = {
+      status: "results",
+      query: "spai",
+      countries: [card("Spain")],
+    };
+    expect(exactMatchName(state)).toBe("Spain");
+  });
+
+  it("returns null when several countries match", () => {
+    const state: SearchState = {
+      status: "results",
+      query: "unit",
+      countries: [card("United Kingdom"), card("United States")],
+    };
+    expect(exactMatchName(state)).toBeNull();
+  });
+
+  it.each<SearchState>([
+    { status: "idle" },
+    { status: "loading", query: "spain" },
+    { status: "empty", query: "zzzz" },
+    { status: "error", query: "spain", error: { kind: "network" } },
+  ])("returns null for the $status state", (state) => {
+    expect(exactMatchName(state)).toBeNull();
   });
 });
