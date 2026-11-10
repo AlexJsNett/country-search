@@ -4,20 +4,33 @@ export const HISTORY_LIMIT = 8;
 export type KeyValueStorage = Pick<Storage, "getItem" | "setItem">;
 
 export const addToHistory = (
-  _history: readonly string[],
-  _query: string,
-  _limit: number = HISTORY_LIMIT,
+  history: readonly string[],
+  query: string,
+  limit: number = HISTORY_LIMIT,
 ): readonly string[] => {
-  throw new Error("not implemented");
+  const trimmed = query.trim();
+  if (trimmed === "") return history;
+  const others = history.filter(
+    (entry) => entry.toLowerCase() !== trimmed.toLowerCase(),
+  );
+  return [trimmed, ...others].slice(0, limit);
 };
 
-export const loadHistory = (_storage: KeyValueStorage): readonly string[] => {
-  throw new Error("not implemented");
+const isNonEmptyString = (value: unknown): value is string =>
+  typeof value === "string" && value !== "";
+
+export const loadHistory = (storage: KeyValueStorage): readonly string[] => {
+  try {
+    const parsed: unknown = JSON.parse(storage.getItem(HISTORY_KEY) ?? "[]");
+    return Array.isArray(parsed) ? parsed.filter(isNonEmptyString) : [];
+  } catch {
+    return [];
+  }
 };
 
 export const saveHistory = (
-  _storage: KeyValueStorage,
-  _history: readonly string[],
+  storage: KeyValueStorage,
+  history: readonly string[],
 ): void => {
-  throw new Error("not implemented");
+  storage.setItem(HISTORY_KEY, JSON.stringify(history));
 };
