@@ -44,11 +44,19 @@ export const createSearchController = ({
   debounceMs = DEBOUNCE_MS,
 }: SearchControllerOptions): SearchController => {
   let lastQuery = "";
+  let current: AbortController | undefined;
+
+  const cancelCurrent = () => {
+    current?.abort();
+    current = undefined;
+  };
 
   const run = async (query: string): Promise<void> => {
     const request = new AbortController();
+    current = request;
     try {
       const raw = await search(query, request.signal);
+      if (request.signal.aborted) return;
       const countries = raw.map((country) => mapCountryResponse(country));
       onState(
         countries.length === 0
@@ -66,6 +74,7 @@ export const createSearchController = ({
 
   return {
     input: (text) => {
+      cancelCurrent();
       const query = text.trim();
       if (query === "") {
         debouncedRun.cancel();
@@ -79,9 +88,13 @@ export const createSearchController = ({
     },
     retry: () => {
       if (lastQuery === "") return;
+      cancelCurrent();
       onState({ status: "loading", query: lastQuery });
       void run(lastQuery);
     },
-    dispose: () => debouncedRun.cancel(),
+    dispose: () => {
+      debouncedRun.cancel();
+      cancelCurrent();
+    },
   };
 };
