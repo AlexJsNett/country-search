@@ -87,10 +87,10 @@ request is cancelled immediately (see above), so the delay never shows stale dat
   `results` and `inFlight`. Lookup, insert and delete are O(1) on average, the key is built in
   O(k) for a query of length `k`. Memory is O(q) for `q` distinct queries (each stores its result list).
   Each caller subscribes to the shared promise in O(1); aborting a caller is O(1).
-- **History (`src/logic/history.ts`)**: only countries the user actually opened are saved (by their
-  official name, which the API resolves to the same country), so half-typed text and queries without
-  matches never reach it. `addToHistory` is O(h) for a list of at most `h = 8` entries
-  (one `filter`, one `slice`).
+- **History (`src/logic/history.ts`)**: a country is saved by its official name only when the search
+  found exactly one country (`exactMatchName`) or the user opened a card out of several. Half-typed
+  text, queries without matches and long result lists are not saved. `addToHistory` is O(h)
+  for a list of at most `h = 8` entries (one `filter`, one `slice`).
 
 ### Cache and deduplication rules
 

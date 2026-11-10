@@ -1,6 +1,11 @@
 import { searchCountries } from "./logic/api.js";
 import { createCachedSearch } from "./logic/cache.js";
-import { addToHistory, loadHistory, saveHistory } from "./logic/history.js";
+import {
+  addToHistory,
+  exactMatchName,
+  loadHistory,
+  saveHistory,
+} from "./logic/history.js";
 import { createSearchController, type SearchState } from "./logic/search.js";
 import type { CountryCard } from "./logic/types.js";
 import { createDetailsDialog } from "./ui/details.js";
@@ -27,13 +32,21 @@ const input = el("input", {
 
 const controller = createSearchController({
   search: createCachedSearch(searchCountries),
-  onState: (state) => renderState(state),
+  onState: (state) => {
+    renderState(state);
+    const name = exactMatchName(state);
+    if (name !== null) remember(name);
+  },
 });
 
-const openCountry = (country: CountryCard) => {
-  history = addToHistory(history, country.name);
+const remember = (name: string) => {
+  history = addToHistory(history, name);
   saveHistory(localStorage, history);
   renderHistorySlot();
+};
+
+const openCountry = (country: CountryCard) => {
+  remember(country.name);
   details.open(country);
 };
 
