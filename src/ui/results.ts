@@ -14,10 +14,19 @@ export const renderResults = (
   switch (state.status) {
     case "idle":
       return [
-        el("p", {
-          className: "hint",
-          textContent: "Начните вводить название страны.",
-        }),
+        el(
+          "div",
+          { className: "placeholder" },
+          el("span", {
+            className: "placeholder-icon",
+            ariaHidden: "true",
+            textContent: "\u{1F30D}",
+          }),
+          el("p", {
+            className: "hint",
+            textContent: "Начните вводить название страны.",
+          }),
+        ),
       ];
     case "loading":
       return [
@@ -33,6 +42,11 @@ export const renderResults = (
         el(
           "div",
           { className: "empty" },
+          el("span", {
+            className: "placeholder-icon",
+            ariaHidden: "true",
+            textContent: "\u{1F50E}",
+          }),
           el("p", {
             className: "empty-title",
             textContent: `Ничего не найдено по запросу «${state.query}»`,

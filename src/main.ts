@@ -53,6 +53,7 @@ const renderHistorySlot = () => {
 };
 
 const renderState = (state: SearchState) => {
+  resultsSlot.scrollTop = 0;
   resultsSlot.replaceChildren(
     ...renderResults(state, {
       onOpen: details.open,
